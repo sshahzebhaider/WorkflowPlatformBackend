@@ -1,0 +1,124 @@
+@baseUrl = http://localhost:5080
+@projectId = REPLACE_PROJECT_INTEGER_ID
+@calendarId = REPLACE_CALENDAR_INTEGER_ID
+@formId = REPLACE_FORM_INTEGER_ID
+@workflowId = REPLACE_WORKFLOW_INTEGER_ID
+@caseTypeId = REPLACE_CASE_TYPE_INTEGER_ID
+@taskId = REPLACE_TASK_INTEGER_ID
+@lookupId = REPLACE_LOOKUP_LIST_INTEGER_ID
+@actor = YOUR_BOOTSTRAPPED_USERNAME
+
+### Health (no auth)
+GET {{baseUrl}}/health/live
+
+### Current user (local development only)
+GET {{baseUrl}}/api/me
+X-Dev-User: {{actor}}
+
+### Calendars (platform admin)
+GET {{baseUrl}}/api/calendars
+X-Dev-User: {{actor}}
+
+### Create a calendar (code generated automatically)
+POST {{baseUrl}}/api/calendars
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{"name":"Pakistan Business Days","timeZoneId":"Pakistan Standard Time"}
+
+### Add holiday range
+POST {{baseUrl}}/api/calendars/{{calendarId}}/holidays
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{"name":"Eid","startDate":"2027-03-12","endDate":"2027-03-15"}
+
+### Current accessible projects
+GET {{baseUrl}}/api/projects
+X-Dev-User: {{actor}}
+
+### Onboard a project (adminIdsJson accepts an array)
+POST {{baseUrl}}/api/projects/onboard
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{"name":"People Services","calendarId":"REPLACE_CALENDAR_INTEGER_ID","ownerUserId":"REPLACE_OWNER_INTEGER_ID","adminIdsJson":["REPLACE_ADMIN_INTEGER_ID"],"termsJson":{"case":"Request","cases":"Requests","subject":"Employee"}}
+
+### Create a lookup
+POST {{baseUrl}}/api/lookups
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{"name":"Request Priority","scope":"Global"}
+
+### Add several options
+POST {{baseUrl}}/api/lookups/{{lookupId}}/items/bulk
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{"itemsJson":[{"code":"HIGH","label":"High"},{"code":"NORMAL","label":"Normal"}]}
+
+### Create a form
+POST {{baseUrl}}/api/projects/{{projectId}}/forms
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{"name":"Intake Form"}
+
+### Save form draft
+POST {{baseUrl}}/api/forms/{{formId}}/draft
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{"definitionJson":{"fields":[{"key":"employee_id","label":"Employee ID","type":"text","required":true,"regex":"^[0-9]{5}$","regexMessage":"Exactly 5 digits"}]}}
+
+### Publish form
+POST {{baseUrl}}/api/forms/{{formId}}/publish
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{}
+
+### Create and publish a workflow (workflow draft uses Chunk 6 graph nodes+edges)
+POST {{baseUrl}}/api/projects/{{projectId}}/workflows
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{"name":"Approval Process"}
+
+### Save workflow graph
+POST {{baseUrl}}/api/workflows/{{workflowId}}/draft
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{"graphJson":{"nodes":[],"edges":[]}}
+
+### Publish workflow (requires valid Start / Human Step / End graph)
+POST {{baseUrl}}/api/workflows/{{workflowId}}/publish
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{}
+
+### Start case using a published case type
+POST {{baseUrl}}/api/projects/{{projectId}}/cases
+X-Dev-User: {{actor}}
+Idempotency-Key: sample-create-0001
+Content-Type: application/json
+
+{"caseTypeId":"{{caseTypeId}}","title":"Example employee request","intakeJson":{"employee_id":"12345"},"classificationJson":{}}
+
+### My Tasks
+GET {{baseUrl}}/api/projects/{{projectId}}/tasks/mine
+X-Dev-User: {{actor}}
+
+### Complete task
+POST {{baseUrl}}/api/tasks/{{taskId}}/complete
+X-Dev-User: {{actor}}
+Content-Type: application/json
+
+{"action":"Approve","answersByFormJson":{}}
+
+### My project reports
+GET {{baseUrl}}/api/projects/{{projectId}}/reports/summary
+X-Dev-User: {{actor}}
